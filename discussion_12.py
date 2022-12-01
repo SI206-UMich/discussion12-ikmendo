@@ -16,8 +16,8 @@ def setUpDatabase(db_name):
 # TASK 1
 # CREATE TABLE FOR EMPLOYEE INFORMATION IN DATABASE AND ADD INFORMATION
 def create_employee_table(cur, conn):
-    pass
-
+    cur.execute ('create table if not exists Employees(employee_id INTEGER PRIMARY KEY, first_name TEXT, last_name TEXT , job_id INTEGER , hire_date DATE, salary NUMBER' )
+    conn.commit()
 # ADD EMPLOYEE'S INFORMTION TO THE TABLE
 
 def add_employee(filename, cur, conn):
@@ -27,20 +27,52 @@ def add_employee(filename, cur, conn):
     file_data = f.read()
     f.close()
     # THE REST IS UP TO YOU
-    pass
-
+    data = json.loads(file_data)
+    for item in data:
+        emp_id = item['employee_id']
+        f_name = item['first_name']
+        l_name = item['last_name']
+        hire = item['hire_date']
+        job_id = item['job_id']
+        salary = item['salary'] 
+        cur.execute('INSERT OR IGNORE INTO Employees(employee_id, first_name, last_name, job_id, hire, salary) VALUES (?, ?, ?, ?, ?, ?)', (emp_id, f_name, l_name, hire, job_id, salary))
+        conn.commit()
 # TASK 2: GET JOB AND HIRE_DATE INFORMATION
 def job_and_hire_date(cur, conn):
-    pass
-
+    cur.execute('SELECT jobs.job_title, employees.hire_date FROM Jobs JOIN Employees ON jobs.job_id = employees.job_id order by employees.hire_date limit 1')
+    x = cur.fetchone()
+    return x[0]
 # TASK 3: IDENTIFY PROBLEMATIC SALARY DATA
 # Apply JOIN clause to match individual employees
 def problematic_salary(cur, conn):
-    pass
-
+    cur.execute('SELECT employees.first_name, employees.last_name from employees JOIN jobs on jobs.job_id = employees.job_id WHERE employees.salary < jobs.min_salary or employees.salary > jobs.max_salary')
+    x = cur.fetchall()
+    return x
 # TASK 4: VISUALIZATION
 def visualization_salary_data(cur, conn):
-    pass
+    plt.figure()
+
+    cur.execute ("SELECT Jobs.job_title, Employees.salary FROM Employees JOIN Jobs ON Jobs.job_id = Employees.job_id")
+    res = cur.fetchall()
+    conn.commit()
+    x,y=zip(*res)
+    plt.scatter(x,y)
+#min
+    cur.execute("SELECT Jobs,job_title, Jobs.min_salary FROM Jobs")
+    res = cur.fetchall()
+    conn.commit()
+    x,y=zip(*res)
+    plt.scatter(x,y, color = 'red', marker = 'X')
+#max
+    cur.execute("SELECT Jobs,job_title, Jobs.max_salary FROM Jobs")
+    res = cur.fetchall()
+    conn.commit()
+    x,y=zip(*res)
+    plt.scatter(x,y, color = 'red', marker = 'X')
+
+    plt.xticks(rotation = 45)
+    plt.tight_layout()
+    plt.show()
 
 class TestDiscussion12(unittest.TestCase):
     def setUp(self) -> None:
